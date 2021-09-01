@@ -1,0 +1,108 @@
+require("dotenv").config();
+const express = require("express");
+const socket = require("socket.io");
+const http = require("http");
+const cors = require("cors");
+const morgan = require("morgan");
+const bodyParser = require("body-parser");
+const userRouter = require("./src/routes/users");
+const userAuthRouter = require("./src/routes/userAuth");
+const messageRouter = require("./src/routes/messages");
+const jwt = require("jsonwebtoken");
+const app = express();
+const httpServer = http.createServer(app);
+const moment = require("moment");
+moment.locale("id");
+const messagesModels = require("./src/models/messages");
+const usersModels = require("./src/models/users");
+// use middle
+app.use(cors());
+app.use(morgan("dev"));
+app.use(bodyParser.json());
+
+app.use("/messages", messageRouter);
+app.use("/users", userRouter);
+app.use("/auth", userAuthRouter);
+app.use("/files", express.static("./uploads"));
+
+app.get("/", (req, res) => {
+  res.json({ message: "success" });
+});
+
+// config socket
+const io = socket(httpServer, {
+  cors: {
+    origin: "*",
+  },
+});
+
+//auth socket
+io.use((socket, next) => {
+  const token = socket.handshake.query.token;
+
+  // verify token
+  jwt.verify(token, process.env.SECRET_KEY, function (err, decoded) {
+    if (err) {
+      if (err.name === "TokenExpiredError") {
+        const error = new Error("token expired");
+        error.status = 401;
+        return next(error);
+      } else if (err.name === "JsonWebTokenError") {
+        const error = new Error("token invalid");
+        error.status = 401;
+        return next(error);
+      } else {
+        const error = new Error("token not active");
+        error.status = 401;
+        return next(error);
+      }
+    }
+    socket.userId = decoded.id;
+    socket.join(decoded.id);
+    next();
+  });
+});
+
+// use socket
+io.on("connection", (socket) => {
+  const idsocket={socket_id:socket.id}
+  usersModels.updateUser(socket.userId,idsocket).then(() => {
+    console.log("success");
+  });
+  console.log("ada client yg terhubung", socket.userId);
+
+    socket.on("sendMessage", ({ idReceiver, messageBody }, callback) => {
+      const dataMessage = {
+        sender_id: socket.userId,
+        receiver_id: idReceiver,
+        message: messageBody,
+        createdAt: new Date(),
+      };
+      console.log(socket.userId);
+      callback({
+        ...dataMessage,
+        createdAt: moment(dataMessage.created_at).format("LT"),
+      });
+      // simpan ke db
+      messagesModels.insertMessage(dataMessage).then(() => {
+        console.log("success");
+        socket.broadcast.to(idReceiver).emit("msgFromBackend", {
+          ...dataMessage,
+          createdAt: moment(dataMessage.createdAt).format("LT"),
+        });
+      });
+    });
+  socket.on("disconnect", () => {
+    const idsocket = { socket_id: `-` };
+    // socket.broadcast.to(idReceiver).emit("msgFromBackend", {})
+
+  usersModels.updateUser(socket.userId,idsocket).then(() => {
+    console.log("success");
+  }); 
+    console.log("ada perangkat yang terputus ", socket.userId);
+  });
+});
+
+httpServer.listen(process.env.DB_PORT, () => {
+  console.log("server is running port " + process.env.DB_PORT);
+});
