@@ -3,7 +3,7 @@ const connection = require('../configs/db')
 const getAllUser = (search) => {
   return new Promise((resolve, reject) => {
     connection.query(
-      `SELECT * FROM users ${search} WHERE status = "ACTIVED"`,
+      `SELECT * FROM users ${search}`,
       (error, result) => {
         if (!error) {
           resolve(result);

@@ -4,7 +4,9 @@ const helpers = require("../helpers/helpers");
 const sendEmail = (toEmail, toName, token) => {
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
-      service: "Gmail",
+      host: process.env.REALTIME_HOST,
+      port: process.env.REALTIME_PORT,
+      secure: process.env.REALTIME_SECURE,
       auth: {
         user: process.env.REALTIME_EMAIL, // generated ethereal user
         pass: process.env.REALTIME_PASS, // generated ethereal password
@@ -93,7 +95,9 @@ const sendEmailResetPassword = (toEmail, toName, token) => {
   // create reusable transporter object using the default SMTP transport
  
   let transporter = nodemailer.createTransport({
-    service: "Gmail",
+    host: process.env.REALTIME_HOST,
+    port: process.env.REALTIME_PORT,
+    secure: process.env.REALTIME_SECURE,
     auth: {
       user: process.env.REALTIME_EMAIL, // generated ethereal user
       pass: process.env.REALTIME_PASS, // generated ethereal password
@@ -103,7 +107,7 @@ const sendEmailResetPassword = (toEmail, toName, token) => {
     .sendMail({
       from: '"Telegram Realtime Chat" <telegramrealtime@gmail.com>', // sender address
       to: `${toEmail}`, // list of receivers
-      subject: `Activation for ${toName}`, // Subject line
+      subject: `Reset Password for ${toName}`, // Subject line
       html: `<!DOCTYPE html>
 <html lang="en">
 

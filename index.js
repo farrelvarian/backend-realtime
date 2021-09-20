@@ -58,6 +58,7 @@ io.use((socket, next) => {
       }
     }
     socket.userId = decoded.id;
+    socket.userName = decoded.name;
     socket.join(decoded.id);
     next();
   });
@@ -65,41 +66,55 @@ io.use((socket, next) => {
 
 // use socket
 io.on("connection", (socket) => {
-  const idsocket={socket_id:socket.id}
-  usersModels.updateUser(socket.userId,idsocket).then(() => {
+  const idsocket = { socket_id: socket.id };
+  usersModels.updateUser(socket.userId, idsocket).then(() => {
     console.log("success");
   });
-  console.log("ada client yg terhubung", socket.userId);
+  console.log("ada client yg terhubung", socket.userName);
 
-    socket.on("sendMessage", ({ idReceiver, messageBody }, callback) => {
-      const dataMessage = {
-        sender_id: socket.userId,
-        receiver_id: idReceiver,
-        message: messageBody,
-        createdAt: new Date(),
-      };
-      console.log(socket.userId);
-      callback({
+  socket.on("sendMessage", ({ idReceiver, messageBody }, callback) => {
+    const dataMessage = {
+      sender_name:socket.userName,
+      sender_id: socket.userId,
+      receiver_id: idReceiver,
+      message: messageBody,
+      createdAt: new Date(),
+    };
+    console.log(socket.userId);
+    callback({
+      ...dataMessage,
+      createdAt: moment(dataMessage.created_at).format("LT"),
+    });
+    // simpan ke db
+    
+    messagesModels.insertMessage(dataMessage).then(() => {
+      console.log("success");
+      socket.broadcast.to(idReceiver).emit("msgFromBackend", {
         ...dataMessage,
-        createdAt: moment(dataMessage.created_at).format("LT"),
-      });
-      // simpan ke db
-      messagesModels.insertMessage(dataMessage).then(() => {
-        console.log("success");
-        socket.broadcast.to(idReceiver).emit("msgFromBackend", {
-          ...dataMessage,
-          createdAt: moment(dataMessage.createdAt).format("LT"),
-        });
+        createdAt: moment(dataMessage.createdAt).format("LT"),
       });
     });
+  });
   socket.on("disconnect", () => {
     const idsocket = { socket_id: `-` };
     // socket.broadcast.to(idReceiver).emit("msgFromBackend", {})
 
-  usersModels.updateUser(socket.userId,idsocket).then(() => {
-    console.log("success");
-  }); 
-    console.log("ada perangkat yang terputus ", socket.userId);
+    usersModels.updateUser(socket.userId, idsocket).then(() => {
+      console.log("success");
+    });
+    console.log("ada perangkat yang terputus ", socket.userName);
+  });
+});
+
+app.use("*", (req, res, next) => {
+  const error = new createError.NotFound();
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(err.status || 500).json({
+    message: err.message || "internal server Error",
   });
 });
 

@@ -36,7 +36,7 @@ const register = async (req, res, next) => {
         .then((result) => {
           delete data.password;
           jwt.sign(
-            { email: data.email,id: user.id },
+            { email: data.email, id: user.id },
             process.env.SECRET_KEY,
             { expiresIn: "2h" },
             function (err, token) {
@@ -54,31 +54,36 @@ const register = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-  const { email, password } = req.body;
-  const result = await userModels.findUser(email);
-  const user = result[0];
-  const status = user.status;
+  try {
+    const { email, password } = req.body;
+    const user = (await userModels.findUser(email))[0];
+    if (!user)
+    return res.status(404).send({ message: "email not registered!" });
+    const status = user.status;
+    if (status == "ACTIVED") {
+      bcrypt.compare(password, user.password, (err, resCompare) => {
+        if (resCompare === false)
+          return res
+            .status(401)
+            .send({ message: `email and password don't match!` });
 
-  if (status == "ACTIVED") {
-    bcrypt.compare(password, user.password, function (err, resCompare) {
-      if (!resCompare) {
-        return helpers.response(res, "password wrong", null, 401);
-      }
-
-      // generate token
-      jwt.sign(
-        { email: user.email, id: user.id },
-        process.env.SECRET_KEY,
-        { expiresIn: "24h" },
-        function (err, token) {
-          delete user.password;
-          user.token = token;
-          helpers.response(res, "success login", user, 200);
-        }
-      );
-    });
-  } else {
-    return helpers.response(res, "account not actived", null, 401);
+        // generate token
+        jwt.sign(
+          { email: user.email, id: user.id , name:user.name},
+          process.env.SECRET_KEY,
+          { expiresIn: "24h" },
+          function (err, token) {
+            delete user.password;
+            user.token = token;
+            helpers.response(res, "success login", user, 200);
+          }
+        );
+      });
+    } else {
+      return helpers.response(res, "account not actived", null, 401);
+    }
+  } catch (error) {
+    next(new Error(error.message));
   }
 };
 

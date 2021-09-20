@@ -86,65 +86,71 @@ const insertUser = (req, res, next) => {
 };
 
 const updateUser = (req, res) => {
+  const id = req.params.id;
+  let avatar = "";
+  let imageUserInput = "";
 
-    const id = req.params.id;
-    let avatar = "";
-    let imageUserInput = "";
+  if (!req.file) {
+    imageUserInput = "";
+  } else {
+    imageUserInput = req.file.filename;
+  }
 
-    if (!req.file) {
-      imageUserInput = "";
+  userModel.getUser(id).then((result) => {
+    const oldImageUser = result[0].image;
+
+    const newImageUser = `${process.env.BASE_URL}/files/${imageUserInput}`;
+    const {
+      display_name,
+      first_name,
+      last_name,
+      email,
+      address,
+      phone,
+      dateOfBirth,
+      gender,
+    } = req.body;
+    if (imageUserInput == "") {
+      avatar = oldImageUser;
     } else {
-      imageUserInput = req.file.filename;
+      avatar = newImageUser;
     }
-
-    userModel.getUser(id).then((result) => {
-      const oldImageUser = result[0].image;
-
-      const newImageUser = `${process.env.BASE_URL}/files/${imageUserInput}`;
-      const {
-        name,
-        email,
-        password,
-        phone,
-      } = req.body;
-      if (imageUserInput == "") {
-        avatar = oldImageUser;
-      } else {
-        avatar = newImageUser;
-      }
-      const data = {
-        name: name,
-        email: email,
-        password: password,
-        image: avatar,
-        phone: phone,
-        updatedAt: new Date(),
-      };
-      userModel
-        .updateUser(id, data)
-        .then(() => {
-          helpers.response(res, "Success update data", data, 200);
-          if (avatar === oldImageUser) {
-            console.log("no change on image!");
-          } else {
-            fs.unlink(`${dirPath}/${oldImageUser.substr(28)}`, (err) => {
-              if (err) {
-                console.log("Error unlink image profile!" + err);
-              }
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-          helpers.response(res, "Not found id user", null, 404);
-          fs.unlink(`${dirPath}/${imageUserInput}`, (err) => {
+    const data = {
+      display_name: display_name,
+      first_name: first_name,
+      last_name: last_name,
+      email: email,
+      address: address,
+      phone: phone,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+      image: avatar,
+      updatedAt: new Date(),
+    };
+    userModel
+      .updateUser(id, data)
+      .then(() => {
+        helpers.response(res, "Success update user", data, 200);
+        if (avatar === oldImageUser) {
+          console.log("no change on image!");
+        } else {
+          fs.unlink(`${dirPath}/${oldImageUser.substr(28)}`, (err) => {
             if (err) {
-              console.log("Error unlink image vehicle!" + err);
+              console.log("Error unlink image profile!" + err);
             }
           });
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+        helpers.response(res, "Failed update user", null, 404);
+        fs.unlink(`${dirPath}/${imageUserInput}`, (err) => {
+          if (err) {
+            console.log("Error unlink image profile!" + err);
+          }
         });
-    });
-
+      });
+  });
 };
 
 const deleteUser = (req, res) => {
