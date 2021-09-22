@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const dirPath = path.join(__dirname, "../../uploads");
 const { v4: uuidv4 } = require("uuid");
-
+const { uploads } = require("../middlewares/cloudinary");
 
 const getAllUser = (req, res, next) => {
  const paramSearch = req.query.search || "";
@@ -89,17 +89,22 @@ const updateUser = (req, res) => {
   const id = req.params.id;
   let avatar = "";
   let imageUserInput = "";
-
+  
   if (!req.file) {
     imageUserInput = "";
   } else {
-    imageUserInput = req.file.filename;
+    imageUserInput= req.file;
+     const uploader = async (path) =>
+       await cloudinary.uploads(path, "Realtime-Chat");
+     const { path } = imageUserInput;
+     const newPath = await uploader(path);
+     imageUserInput = newPath.url;
   }
 
   userModel.getUser(id).then((result) => {
     const oldImageUser = result[0].image;
 
-    const newImageUser = `${process.env.BASE_URL}/files/${imageUserInput}`;
+    const newImageUser = imageUserInput;
     const {
       display_name,
       first_name,
@@ -134,7 +139,7 @@ const updateUser = (req, res) => {
         if (avatar === oldImageUser) {
           console.log("no change on image!");
         } else {
-          fs.unlink(`${dirPath}/${oldImageUser.substr(28)}`, (err) => {
+          fs.unlink(`${dirPath}/${oldImageUser.substr(44)}`, (err) => {
             if (err) {
               console.log("Error unlink image profile!" + err);
             }
