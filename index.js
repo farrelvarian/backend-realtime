@@ -4,7 +4,7 @@ const socket = require("socket.io");
 const http = require("http");
 const cors = require("cors");
 const morgan = require("morgan");
-const bodyParser = require("body-parser");
+// const bodyParser = require("body-parser");
 const userRouter = require("./src/routes/users");
 const userAuthRouter = require("./src/routes/userAuth");
 const messageRouter = require("./src/routes/messages");
@@ -16,12 +16,13 @@ moment.locale("id");
 const messagesModels = require("./src/models/messages");
 const usersModels = require("./src/models/users");
 // use middle
-app.use(bodyParser.json());
-app.use(morgan("dev"));
 const optionCors = {
   origin: [true, process.env.FRONT_URL],
 };
 app.use(cors(optionCors));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(morgan("dev"));
 
 app.use("/messages", messageRouter);
 app.use("/users", userRouter);
