@@ -16,6 +16,8 @@ moment.locale("id");
 const messagesModels = require("./src/models/messages");
 const usersModels = require("./src/models/users");
 // use middle
+app.use(bodyParser.json());
+app.use(morgan("dev"));
 app.use(cors());
 app.use((_, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -29,8 +31,6 @@ app.use((_, res, next) => {
   res.header("Access-Control-Allow-Credentials", true); // If needed
   next();
 });
-app.use(morgan("dev"));
-app.use(bodyParser.json());
 
 app.use("/messages", messageRouter);
 app.use("/users", userRouter);
