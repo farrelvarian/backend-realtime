@@ -16,10 +16,19 @@ moment.locale("id");
 const messagesModels = require("./src/models/messages");
 const usersModels = require("./src/models/users");
 // use middle
-const optionCors = {
-  origin: [true, process.env.FRONT_URL],
-};
-app.use(cors(optionCors));
+app.use(cors());
+app.use((_, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
+  ); // If needed
+  res.header(
+    "Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  ); // If needed
+  res.header("Access-Control-Allow-Credentials", true); // If needed
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan("dev"));
@@ -122,6 +131,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-httpServer.listen(process.env.DB_PORT, () => {
-  console.log("server is running port " + process.env.DB_PORT);
+app.listen(PORT, () => {
+  console.log(`server is running on port ${PORT}`);
 });
