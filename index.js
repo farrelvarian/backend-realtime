@@ -131,6 +131,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`server is running on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`server is running on port ${process.env.PORT}`);
 });
