@@ -18,19 +18,8 @@ const usersModels = require("./src/models/users");
 // use middle
 app.use(bodyParser.json());
 app.use(morgan("dev"));
-app.use(cors());
-app.use((_, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, OPTIONS, PUT, PATCH, DELETE"
-  ); // If needed
-  res.header(
-    "Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  ); // If needed
-  res.header("Access-Control-Allow-Credentials", true); // If needed
-  next();
-});
+const optionCors = { credentials: true, origin: true };
+app.use(cors(optionCors));
 
 app.use("/messages", messageRouter);
 app.use("/users", userRouter);
