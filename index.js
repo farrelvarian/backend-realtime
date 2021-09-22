@@ -18,10 +18,10 @@ const usersModels = require("./src/models/users");
 // use middle
 app.use(bodyParser.json());
 app.use(morgan("dev"));
-const setupCors = {
-  origin: `${process.env.FRONT_URL}`,
-};
-app.use(cors(setupCors));
+// const setupCors = {
+//   origin: `${process.env.FRONT_URL}`,
+// };
+app.use(cors());
 
 app.use("/messages", messageRouter);
 app.use("/users", userRouter);
