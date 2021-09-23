@@ -1,7 +1,7 @@
 <h1 align="center">ExpressJS - #backend-Relatime-chat RESTfull API</h1>
 
 
-A realtime chat website that allows users to communicate via chat in real time. It has search, chat, and user profile features for users. Built using ReactJS, ExpressJS, MySQL and Socket.io.xpressJS and MySQL.
+A realtime chat website that allows users to communicate via chat in real time. It has search, chat, and user profile features for users. Built using ReactJS, ExpressJS, MySQL and Socket.io.
 
 <p align='center'>
    ·
